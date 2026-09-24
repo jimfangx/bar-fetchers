@@ -18,3 +18,10 @@ class WithTLICachePrefetcher(p: CanInstantiatePrefetcher = SingleNextLinePrefetc
 class WithHellaCachePrefetcher(tileIds: Seq[Int], p: CanInstantiatePrefetcher = MultiNextLinePrefetcherParams(handleVA=true)) extends Config((site, here, up) => {
   case BuildHellaCache => HellaCachePrefetchWrapperFactory.apply(tileIds, p, up(BuildHellaCache))
 })
+
+/** Install Best-Offset on each non-MMIO D-cache TileLink client. */
+class WithBestOffsetPrefetcher(p: BestOffsetPrefetcherParams = BestOffsetPrefetcherParams()) extends Config((site, here, up) => {
+  case TLPrefetcherKey => up(TLPrefetcherKey).copy(
+    prefetcher = (name: String) => if (name.contains("DCache") && !name.contains("MMIO")) Some(p) else up(TLPrefetcherKey).prefetcher(name)
+  )
+})

@@ -8,6 +8,10 @@ import freechips.rocketchip.util._
 import freechips.rocketchip.tilelink._
 import freechips.rocketchip.subsystem.{CacheBlockBytes}
 
+// TLPrefetcher sets this to the negotiated TileLink address width. Both
+// directions of PrefetcherIO must use the same width for a DFX RM swap.
+case object PrefetchAddressBits extends Field[Int](54)
+
 trait CanInstantiatePrefetcher {
   def desc: String
   def instantiate()(implicit p: Parameters): AbstractPrefetcher
@@ -17,7 +21,7 @@ class Snoop(implicit val p: Parameters) extends Bundle {
   val blockBytes = p(CacheBlockBytes)
 
   val write = Bool()
-  val address = UInt()
+  val address = UInt(p(PrefetchAddressBits).W)
   def block = address >> log2Up(blockBytes)
   def block_address = block << log2Up(blockBytes)
 }
@@ -26,7 +30,7 @@ class Prefetch(implicit val p: Parameters) extends Bundle {
   val blockBytes = p(CacheBlockBytes)
 
   val write = Bool()
-  val address = UInt()
+  val address = UInt(p(PrefetchAddressBits).W)
   def block = address >> log2Up(blockBytes)
   def block_address = block << log2Up(blockBytes)
 }
@@ -52,4 +56,3 @@ case class NullPrefetcherParams() extends CanInstantiatePrefetcher {
 }
 
 class NullPrefetcher(implicit p: Parameters) extends AbstractPrefetcher()(p)
-
